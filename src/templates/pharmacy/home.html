@@ -1,0 +1,98 @@
+{% extends "pharmacy/base.html" %}
+
+{% block title %}Smart Pharmacy - Home{% endblock %}
+
+{% block full_content %}
+<div class="home-container" style="background-image: url('https://images.unsplash.com/photo-1587854692152-cbe660dbde88?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80'); background-size: cover; background-position: center;">
+    <!-- Animated Bubbles -->
+    <div id="bubbles-container"></div>
+    
+    <div class="container full-content">
+        <div class="row justify-content-center align-items-center" style="min-height: 80vh;">
+            <div class="col-md-8 text-center">
+                <h1 class="display-4 mb-4 text-white" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">Smart Pharmacy Management</h1>
+                <p class="lead text-white mb-5" style="text-shadow: 1px 1px 2px rgba(0,0,0,0.5);">Efficiently manage your pharmacy with our intelligent system</p>
+                
+                <div class="row justify-content-center">
+                    <div class="col-md-4 mb-4">
+                        <div class="card home-card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-pills fa-3x text-primary mb-3"></i>
+                                <h5 class="card-title">Medications</h5>
+                                <p class="card-text">Manage your medication inventory</p>
+                                <a href="{% url 'pharmacy:medication_list' %}" class="btn btn-primary rounded-pill">View Medications</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-4">
+                        <div class="card home-card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-shopping-cart fa-3x text-success mb-3"></i>
+                                <h5 class="card-title">Purchases</h5>
+                                <p class="card-text">Record and track all purchases</p>
+                                <a href="{% url 'pharmacy:purchase_list' %}" class="btn btn-success rounded-pill">Manage Purchases</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-4">
+                        <div class="card home-card h-100">
+                            <div class="card-body text-center">
+                                <i class="fas fa-chart-bar fa-3x text-warning mb-3"></i>
+                                <h5 class="card-title">Reports</h5>
+                                <p class="card-text">View analytics and reports</p>
+                                <a href="{% url 'pharmacy:reports' %}" class="btn btn-warning rounded-pill">View Reports</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Create animated bubbles
+    document.addEventListener('DOMContentLoaded', function() {
+        const bubblesContainer = document.getElementById('bubbles-container');
+        const containerWidth = bubblesContainer.offsetWidth;
+        const containerHeight = bubblesContainer.offsetHeight;
+        
+        // Create 15 bubbles
+        for (let i = 0; i < 15; i++) {
+            createBubble(bubblesContainer, containerWidth, containerHeight);
+        }
+    });
+    
+    function createBubble(container, maxWidth, maxHeight) {
+        const bubble = document.createElement('div');
+        bubble.classList.add('bubble');
+        
+        // Random size between 20px and 120px
+        const size = Math.random() * 100 + 20;
+        bubble.style.width = `${size}px`;
+        bubble.style.height = `${size}px`;
+        
+        // Random position
+        const posX = Math.floor(Math.random() * maxWidth);
+        const posY = Math.floor(Math.random() * maxHeight);
+        bubble.style.left = `${posX}px`;
+        bubble.style.bottom = `${-100}px`;
+        
+        // Random color with transparency
+        const r = Math.floor(Math.random() * 255);
+        const g = Math.floor(Math.random() * 255);
+        const b = Math.floor(Math.random() * 255);
+        bubble.style.backgroundColor = `rgba(${r}, ${g}, ${b}, 0.2)`;
+        
+        // Random animation duration between 5 and 15 seconds
+        const duration = Math.random() * 10 + 5;
+        bubble.style.animation = `float ${duration}s infinite ease-in-out ${Math.random() * 5}s`;
+        
+        container.appendChild(bubble);
+    }
+</script>
+{% endblock %}

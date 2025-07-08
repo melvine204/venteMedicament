@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Médicaments - Admin Melvine</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 250px;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            z-index: 1000;
+            transition: transform 0.3s;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-nav {
+            padding: 1rem 0;
+        }
+
+        .nav-item {
+            display: block;
+            padding: 0.75rem 1.5rem;
+            color: white;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-item i {
+            margin-right: 0.5rem;
+            width: 20px;
+        }
+
+        .main-content {
+            margin-left: 250px;
+            padding: 2rem;
+        }
+
+        .header {
+            background: white;
+            padding: 1rem 2rem;
+            margin: -2rem -2rem 2rem -2rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #333;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .btn-logout {
+            background: #dc3545;
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+
+        .btn-logout:hover {
+            background: #c82333;
+        }
+
+        .search-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        .search-form {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-search {
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn-search:hover {
+            transform: translateY(-2px);
+        }
+
+        .medicaments-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .medicament-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .medicament-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .medicament-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: #f8f9fa;
+        }
+
+        .medicament-placeholder {
+            width: 100%;
+            height: 200px;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ccc;
+            font-size: 3rem;
+        }
+
+        .medicament-content {
+            padding: 1.5rem;
+        }
+
+        .medicament-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .medicament-description {
+            color: #666;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .medicament-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .btn-toggle {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+
+        .btn-toggle.active {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-toggle.inactive {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-view {
+            padding: 0.5rem 1rem;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+
+        .btn-view:hover {
+            background: #0056b3;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 2rem;
+            gap: 0.5rem;
+        }
+
+        .pagination a,
+        .pagination span {
+            padding: 0.5rem 1rem;
+            border: 1px solid #dee2e6;
+            color: #007bff;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+        .pagination .current {
+            background: #007bff;
+            color: white;
+        }
+
+        .mobile-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #333;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .mobile-toggle {
+                display: block;
+            }
+
+            .header {
+                padding: 1rem;
+                margin: -2rem -2rem 2rem -2rem;
+            }
+
+            .medicaments-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .search-form {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-pills"></i> Melvine</h2>
+            <p>Administration</p>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{% url 'admin_dashboard' %}" class="nav-item">
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+            </a>
+            <a href="{% url 'admin_medicaments' %}" class="nav-item active">
+                <i class="fas fa-pills"></i> Médicaments
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-users"></i> Utilisateurs
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-chart-bar"></i> Statistiques
+            </a>
+            <a href="#" class="nav-item">
+                <i class="fas fa-cog"></i> Paramètres
+            </a>
+        </nav>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <button class="mobile-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1>Médicaments</h1>
+            </div>
+            <div class="user-menu">
+                <span>Bienvenue, {{ user.username }}</span>
+                <a href="{% url 'admin_logout' %}" class="btn-logout">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </a>
+            </div>
+        </div>
+
+        <div class="search-section">
+            <form class="search-form" method="get">
+                <input type="text" 
+                       name="search" 
+                       class="search-input" 
+                       placeholder="Rechercher un médicament..." 
+                       value="{{ search_query }}">
+                <button type="submit" class="btn-search">
+                    <i class="fas fa-search"></i> Rechercher
+                </button>
+            </form>
+        </div>
+
+        <div class="medicaments-grid">
+            {% for medicament in page_obj %}
+            <div class="medicament-card">
+                {% if medicament.image %}
+                    <img src="{{ medicament.image.url }}" alt="{{ medicament.nom }}" class="medicament-image">
+                {% else %}
+                    <div class="medicament-placeholder">
+                        <i class="fas fa-pills"></i>
+                    </div>
+                {% endif %}
+                
+                <div class="medicament-content">
+                    <h3 class="medicament-title">{{ medicament.nom }}</h3>
+                    <p class="medicament-description">{{ medicament.description|truncatewords:15 }}</p>
+                    
+                    <div class="medicament-actions">
+                        <div>
+                            {% if medicament.is_active %}
+                                <span class="status-badge status-active">Actif</span>
+                            {% else %}
+                                <span class="status-badge status-inactive">Inactif</span>
+                            {% endif %}
+                        </div>
+                        
+                        <div style="display: flex; gap: 0.5rem;">
+                            <a href="{% url 'admin_medicament_detail' medicament.id %}" class="btn-view">
+                                <i class="fas fa-eye"></i> Voir
+                            </a>
+                            <button onclick="toggleMedicament({{ medicament.id }})" 
+                                    class="btn-toggle {% if medicament.is_active %}active{% else %}inactive{% endif %}"
+                                    id="toggle-{{ medicament.id }}">
+                                {% if medicament.is_active %}
+                                    <i class="fas fa-pause"></i> Désactiver
+                                {% else %}
+                                    <i class="fas fa-play"></i> Activer
+                                {% endif %}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: #666;">
+                <i class="fas fa-pills" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                <h3>Aucun médicament trouvé</h3>
+                <p>{% if search_query %}Aucun résultat pour "{{ search_query }}"{% else %}La base de données est vide{% endif %}</p>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if page_obj.has_other_pages %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}">&laquo; Premier</a>
+                <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Précédent</a>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <span class="current">{{ num }}</span>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <a href="?page={{ num }}{% if search_query %}&search={{ search_query }}{% endif %}">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}">Suivant</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}">Dernier &raquo;</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        function toggleMedicament(medicamentId) {
+            const button = document.getElementById(`toggle-${medicamentId}`);
+            const originalText = button.innerHTML;
+            
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Chargement...';
+            button.disabled = true;
+
+            fetch(`/admin/medicament/${medicamentId}/toggle/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Mettre à jour le bouton
+                    if (data.is_active) {
+                        button.className = 'btn-toggle active';
+                        button.innerHTML = '<i class="fas fa-pause"></i> Désactiver';
+                    } else {
+                        button.className = 'btn-toggle inactive';
+                        button.innerHTML = '<i class="fas fa-play"></i> Activer';
+                    }
+                    
+                    // Mettre à jour le badge de statut
+                    const card = button.closest('.medicament-card');
+                    const statusBadge = card.querySelector('.status-badge');
+                    if (data.is_active) {
+                        statusBadge.className = 'status-badge status-active';
+                        statusBadge.textContent = 'Actif';
+                    } else {
+                        statusBadge.className = 'status-badge status-inactive';
+                        statusBadge.textContent = 'Inactif';
+                    }
+                } else {
+                    alert('Erreur lors de la mise à jour');
+                    button.innerHTML = originalText;
+                }
+                button.disabled = false;
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+                alert('Erreur lors de la mise à jour');
+                button.innerHTML = originalText;
+                button.disabled = false;
+            });
+        }
+
+        // Fermer la sidebar en cliquant en dehors sur mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const toggle = document.querySelector('.mobile-toggle');
+            
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(event.target) && 
+                !toggle.contains(event.target)) {
+                sidebar.classList.remove('active');
+            }
+        });
+
+        // Ajouter le token CSRF pour les requêtes AJAX
+        if (!document.querySelector('[name=csrfmiddlewaretoken]')) {
+            const csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = 'csrfmiddlewaretoken';
+            csrfToken.value = '{{ csrf_token }}';
+            document.body.appendChild(csrfToken);
+        }
+    </script>
+</body>
+</html>

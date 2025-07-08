@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Smart Pharmacy{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4e73df;
+            --secondary-color: #1cc88a;
+            --accent-color: #f6c23e;
+            --dark-color: #5a5c69;
+            --light-color: #f8f9fc;
+        }
+        
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: var(--light-color);
+        }
+        
+        .navbar {
+            background-color: white;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        .sidebar {
+            min-height: 100vh;
+            background-color: var(--primary-color);
+            background-image: linear-gradient(180deg, var(--primary-color) 10%, #224abe 100%);
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            z-index: 1;
+            width: 250px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding-top: 70px;
+            transition: all 0.3s;
+        }
+        
+        .sidebar .nav-item {
+            margin-bottom: 0.5rem;
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 1rem;
+            font-weight: 600;
+            border-radius: 0.35rem;
+            transition: all 0.3s;
+        }
+        
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar .nav-link i {
+            margin-right: 0.5rem;
+        }
+        
+        .content-wrapper {
+            margin-left: 250px;
+            padding: 70px 20px 20px;
+            transition: all 0.3s;
+        }
+        
+        .sidebar-toggled .sidebar {
+            width: 0;
+            overflow: hidden;
+        }
+        
+        .sidebar-toggled .content-wrapper {
+            margin-left: 0;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 0.35rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+        
+        .card-header {
+            background-color: #f8f9fc;
+            border-bottom: 1px solid #e3e6f0;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-success {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        
+        .btn-warning {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+        
+        /* For pages without sidebar */
+        .full-content {
+            padding-top: 70px;
+        }
+        
+        /* Custom styles for home page */
+        .home-container {
+            position: relative;
+            min-height: calc(100vh - 70px);
+            overflow: hidden;
+        }
+        
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            animation: float 8s infinite ease-in-out;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-1000px) rotate(720deg);
+                opacity: 0;
+            }
+        }
+        
+        .home-card {
+            border-radius: 15px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .home-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 2rem rgba(0, 0, 0, 0.2);
+        }
+        
+        .language-dropdown .dropdown-item {
+            cursor: pointer;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 0;
+                overflow: hidden;
+            }
+            
+            .content-wrapper {
+                margin-left: 0;
+            }
+            
+            .sidebar-toggled .sidebar {
+                width: 250px;
+            }
+        }
+    </style>
+            {% block extra_css %}{% endblock %}
+</head>
+<body>
+            <!-- Navigation Bar -->
+            <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+                <div class="container-fluid">
+                    <button id="sidebarToggleBtn" class="btn btn-link d-md-none rounded-circle mr-3">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <a class="navbar-brand" href="{% url 'pharmacy:home' %}">
+                        <i class="fas fa-clinic-medical"></i> Smart Pharmacy
+                    </a>
+            
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+            
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <ul class="navbar-nav ms-auto">
+                            <!-- Language Dropdown -->
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-globe"></i> Language
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end language-dropdown">
+                                    <li><a class="dropdown-item" href="{% url 'pharmacy:change_language' 'en' %}">English</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'pharmacy:change_language' 'fr' %}">Français</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'pharmacy:change_language' 'ar' %}">العربية</a></li>
+                                </ul>
+                            </li>
+                    
+                            {% if user.is_authenticated %}
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-user-circle"></i> {{ user.username }}
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="{% url 'pharmacy:logout' %}">Logout</a></li>
+                                </ul>
+                            </li>
+                            {% else %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'pharmacy:login' %}">
+                                    <i class="fas fa-sign-in-alt"></i> Login
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'pharmacy:register' %}">
+                                    <i class="fas fa-user-plus"></i> Register
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+
+            {% block content_with_sidebar %}
+                <!-- Sidebar -->
+                <div class="sidebar">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'pharmacy:home' %}">
+                                <i class="fas fa-home"></i> Home
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'medication_list' %}active{% endif %}" href="{% url 'pharmacy:medication_list' %}">
+                                <i class="fas fa-pills"></i> Medications
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'purchase_list' %}active{% endif %}" href="{% url 'pharmacy:purchase_list' %}">
+                                <i class="fas fa-shopping-cart"></i> Purchases
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'reports' %}active{% endif %}" href="{% url 'pharmacy:reports' %}">
+                                <i class="fas fa-chart-bar"></i> Reports
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'pharmacy:dashboard' %}">
+
+                                <i class="fas fa-chart-bar"></i> admin
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Page Content -->
+                <div class="content-wrapper">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+            
+                    {% block content %}{% endblock %}
+                </div>
+            {% endblock %}
+    
+            {% block full_content %}{% endblock %}
+    
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+            <script>
+                // Sidebar toggle functionality
+                document.addEventListener('DOMContentLoaded', function() {
+                    const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
+                    if (sidebarToggleBtn) {
+                        sidebarToggleBtn.addEventListener('click', function() {
+                            document.body.classList.toggle('sidebar-toggled');
+                        });
+                    }
+                });
+            </script>
+            {% block extra_js %}{% endblock %}
+</body>
+</html>        
