@@ -1,0 +1,156 @@
+[
+    {
+        "model": "App.category",
+        "fields": {
+            "name": "Antibiotics",
+            "description": "Medications that inhibit the growth of or destroy microorganisms"
+        }
+    },
+    {
+        "model": "App.category",
+        "fields": {
+            "name": "Painkillers",
+            "description": "Medications that relieve pain"
+        }
+    },
+    {
+        "model": "App.category",
+        "fields": {
+            "name": "Antivirals",
+            "description": "Medications used to treat viral infections"
+        }
+    },
+    {
+        "model": "App.category",
+        "fields": {
+            "name": "Antifungals",
+            "description": "Medications that treat fungal infections"
+        }
+    },
+    {
+        "model": "App.category",
+        "fields": {
+            "name": "Antiparasitics",
+            "description": "Medications that treat parasitic infections"
+        }
+    },
+    {
+        "model": "App.category",
+        "fields": {
+            "name": "Antipyretics",
+            "description": "Medications that reduce fever"
+        }
+    },
+    {
+        "model": "App.category",
+        "fields": {
+            "name": "Antidepressants",
+            "description": "Medications used to treat depression and related conditions"
+        }
+    },
+    {
+        "model": "App.category",
+        "fields": {
+            "name": "Antipsychotics",
+            "description": "Medications used to manage psychosis"
+        }
+    },
+    {
+        "model": "App.category",
+        "fields": {
+            "name": "Antiepileptics",
+            "description": "Medications used to treat epilepsy and seizures"
+        }
+    },
+    {
+        "model": "App.category",
+        "fields": {
+            "name": "Antimalarials",
+            "description": "Medications used to prevent and treat malaria"
+        }
+    },
+    {
+        "model": "App.category",
+        "fields": {
+            "name": "Anthelmintics",
+            "description": "Medications that expel parasitic worms from the body"
+        }
+    },
+    {
+        "model": "App.category",
+        "fields": {
+            "name": "Antibacterial",
+            "description": "Medications that destroy or slow down the growth of bacteria"
+        }
+    },
+    {
+        "model": "App.category",
+        "fields": {
+            "name": "Antiviral",
+            "description": "Medications used specifically against viruses"
+        }
+    },
+    {
+        "model": "App.category",
+        "fields": {
+            "name": "Antifungal",
+            "description": "Medications that treat specific fungal infections"
+        }
+    },
+    {
+        "model": "App.category",
+        "fields": {
+            "name": "Antiparasitic",
+            "description": "Medications that treat specific parasitic infections"
+        }
+    },
+    {
+        "model": "App.category",
+        "fields": {
+            "name": "Antipyretic",
+            "description": "Medications specifically for reducing fever"
+        }
+    },
+    {
+        "model": "App.category",
+        "fields": {
+            "name": "Antidepressant",
+            "description": "Medications for treating specific depressive disorders"
+        }
+    },
+    {
+        "model": "App.category",
+        "fields": {
+            "name": "Antipsychotic",
+            "description": "Medications for specific psychotic disorders"
+        }
+    },
+    {
+        "model": "App.category",
+        "fields": {
+            "name": "Antiepileptic",
+            "description": "Medications for specific seizure disorders"
+        }
+    },
+    {
+        "model": "App.category",
+        "fields": {
+            "name": "Antimalarial",
+            "description": "Medications specifically for malaria treatment"
+        }
+    },
+    {
+        "model": "App.category",
+        "fields": {
+            "name": "Anthelmintic",
+            "description": "Medications specifically for worm infestations"
+        }
+    },
+    {
+        "model": "App.category",
+        "fields": {
+            "name": "Autres",
+            "description": "Other medications not fitting in the above categories"
+        }
+    }
+]

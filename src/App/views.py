@@ -5,25 +5,26 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.utils.translation import activate
 from django.utils import translation
 from django.contrib import messages
-from django.db.models import Sum, Count
-from django.http import HttpResponseRedirect, JsonResponse
+from django.db.models import Sum, Count, Q
+from django.http import HttpResponseRedirect, JsonResponse, HttpResponse
 from django.urls import reverse
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.db import transaction
-import json
 from datetime import datetime
 from decimal import Decimal
 from django.core.paginator import Paginator
-from django.db.models import Q
 from .models import *
+from django.template.loader import render_to_string
+from django.utils import timezone
+import json
 
 def home(request):
     """Home page view with background image and navigation buttons."""
     return render(request, 'pharmacy/home.html')
 
-@login_required
+@login_required(login_url='pharmacy:login')
 def medication_list(request):
     """View to display and manage medications."""
     categories = Category.objects.all()
@@ -35,7 +36,7 @@ def medication_list(request):
     }
     return render(request, 'pharmacy/medication_list.html', context)
 
-@login_required
+@login_required(login_url='pharmacy:login')
 @csrf_exempt
 @require_http_methods(["POST"])
 def add_medication(request):
@@ -88,14 +89,14 @@ def add_medication(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
-@login_required
+@login_required(login_url='pharmacy:login')
 @csrf_exempt
 @require_http_methods(["POST"])
-def edit_medication(request, medication_id):
+def edit_medication(request):
     """Edit an existing medication via AJAX."""
     try:
-        medication = get_object_or_404(Medication, id=medication_id)
         data = json.loads(request.body)
+        medication = get_object_or_404(Medication, id=data.get("id"))
         
         # Update fields if provided
         if 'name' in data:
@@ -137,19 +138,23 @@ def edit_medication(request, medication_id):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
-@login_required
+@login_required(login_url='pharmacy:login')
 @csrf_exempt
 @require_http_methods(["POST"])
-def delete_medication(request, medication_id):
+def delete_medication(request):
     """Delete a medication via AJAX."""
     try:
-        medication = get_object_or_404(Medication, id=medication_id)
+        print("HEY")
+        data = json.loads(request.body)
+        print(data)
+        medication = get_object_or_404(Medication, id=data.get('id'))
+        print(medication)
         medication.delete()
         return JsonResponse({'success': True})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
-@login_required
+@login_required(login_url='pharmacy:login')
 def get_medication(request, medication_id):
     """Get medication details for editing."""
     try:
@@ -170,7 +175,32 @@ def get_medication(request, medication_id):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
-@login_required
+@login_required(login_url='pharmacy:login')
+def get_medication_with_post(request):
+    """Get medication details for editing."""
+    try:
+        print("data")
+        data = json.loads(request.body)
+        print(data)
+        medication = get_object_or_404(Medication, id=data.get("id"))
+        print(str(medication.id))
+        return JsonResponse({
+            'success': True,
+            'medication': {
+                'id': medication.id,
+                'name': medication.name,
+                'category_id': medication.category_id,
+                'category_name': medication.category.name,
+                'description': medication.description,
+                'price': str(medication.price),
+                'stock_quantity': medication.stock_quantity,
+                'expiry_date': medication.expiry_date.strftime('%Y-%m-%d')
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@login_required(login_url='pharmacy:login')
 def purchase_list(request):
     """View to display and manage purchases."""
     purchases = Purchase.objects.all().order_by('-purchase_date')
@@ -182,7 +212,7 @@ def purchase_list(request):
     }
     return render(request, 'pharmacy/purchase_list.html', context)
 
-@login_required
+@login_required(login_url='pharmacy:login')
 @csrf_exempt
 @require_http_methods(["POST"])
 def add_purchase(request):
@@ -268,7 +298,7 @@ def add_purchase(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
-@login_required
+@login_required(login_url='pharmacy:login')
 def get_purchase(request, purchase_id):
     """Get purchase details for viewing."""
     try:
@@ -299,13 +329,47 @@ def get_purchase(request, purchase_id):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
-@login_required
+@login_required(login_url='pharmacy:login')
+@require_http_methods(["POST"])
+def get_purchase_details_post(request):
+    """Get purchase details for viewing."""
+    try:
+        data = json.loads(request.body)
+        purchase = get_object_or_404(Purchase, id=data.get("id"))
+        items = []
+        
+        for item in purchase.items.all():
+            items.append({
+                'medication_name': item.medication.name,
+                'quantity': item.quantity,
+                'unit_price': str(item.unit_price),
+                'subtotal': str(item.subtotal)
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'purchase': {
+                'id': purchase.id,
+                'customer_name': purchase.customer_name,
+                'customer_phone': purchase.customer_phone or 'N/A',
+                'total_amount': str(purchase.total_amount),
+                'payment_method': purchase.get_payment_method_display(),
+                'purchase_date': purchase.purchase_date.strftime('%b %d, %Y %H:%M'),
+                'staff': purchase.staff.username if purchase.staff else 'N/A',
+                'items': items
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@login_required(login_url='pharmacy:login')
 @csrf_exempt
 @require_http_methods(["POST"])
-def delete_purchase(request, purchase_id):
+def delete_purchase(request):
     """Delete a purchase via AJAX."""
     try:
-        purchase = get_object_or_404(Purchase, id=purchase_id)
+        data = json.loads(request.body)
+        purchase = get_object_or_404(Purchase, id=data.get('id'))
         
         with transaction.atomic():
             # Restore stock for each item
@@ -321,12 +385,13 @@ def delete_purchase(request, purchase_id):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)})
 
-@login_required
+@login_required(login_url='pharmacy:login')
 def reports(request):
     """View to display various reports and analytics."""
     # Get sales data
     total_sales = Purchase.objects.aggregate(total=Sum('total_amount'))['total'] or 0
     total_purchases = Purchase.objects.count()
+    total_medications = Medication.objects.count()
     
     # Get top selling medications
     top_medications = Medication.objects.annotate(
@@ -340,6 +405,7 @@ def reports(request):
         'total_sales': total_sales,
         'total_purchases': total_purchases,
         'top_medications': top_medications,
+        'total_medications': total_medications,
         'low_stock': low_stock,
     }
     return render(request, 'pharmacy/reports.html', context)
@@ -354,12 +420,12 @@ def login_view(request):
             user = authenticate(username=username, password=password)
             if user is not None:
                 login(request, user)
-                messages.success(request, f"Welcome back, {username}!")
+                messages.success(request, f"Welcome back, {username}!", extra_tags='success')
                 return redirect('pharmacy:home')
             else:
-                messages.error(request, "Invalid username or password.")
+                messages.error(request, "Invalid username or password.", extra_tags='danger')
         else:
-            messages.error(request, "Invalid username or password.")
+            messages.error(request, "Invalid username or password.", extra_tags='danger')
     else:
         form = AuthenticationForm()
     return render(request, 'pharmacy/login.html', {'form': form})
@@ -371,10 +437,12 @@ def register_view(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            messages.success(request, "Registration successful!")
+            messages.success(request, "Registration successful!", extra_tags='success')
             return redirect('pharmacy:home')
         else:
-            messages.error(request, "Registration failed. Please correct the errors.")
+            # messages.error(request, "Registration failed. Please correct the errors.")
+            messages.error(request, form.errors.as_text(), extra_tags='danger')
+            
     else:
         form = UserCreationForm()
     return render(request, 'pharmacy/register.html', {'form': form})
@@ -382,7 +450,7 @@ def register_view(request):
 def logout_view(request):
     """View for user logout."""
     logout(request)
-    messages.info(request, "You have successfully logged out.")
+    messages.info(request, "You have successfully logged out.", extra_tags='info')
     return redirect('pharmacy:home')
 
 def change_language(request, language_code):
@@ -404,9 +472,9 @@ def admin_login(request):
         password = request.POST.get('password')
         
         user = authenticate(request, username=username, password=password)
-        if user is not None and user.is_staff:
+        if user is not None and ( user.is_staff or user.is_superuser):
             login(request, user)
-            messages.success(request, f'Bienvenue {user.username} !')
+            messages.success(request, f'Bienvenue {user.username} !', extra_tags='success')
             
             # Redirection vers le dashboard admin
             next_url = request.GET.get('next')
@@ -414,11 +482,11 @@ def admin_login(request):
                 return redirect(next_url)
             return redirect('admin/dashboard.html')  # Redirection vers admin:dashboard
         else:
-            messages.error(request, 'Identifiants invalides ou accès non autorisé')
+            messages.error(request, 'Identifiants invalides ou accès non autorisé', extra_tags="error")
     
     return render(request, 'admin/login.html')
 
-@login_required
+@login_required(login_url='pharmacy:admin_login')
 def admin_dashboard(request):
     # Statistiques générales
     total_medicaments = Medicament.objects.count()
@@ -436,7 +504,7 @@ def admin_dashboard(request):
     }
     return render(request, 'admin/dashboard.html', context)
 
-@login_required
+@login_required(login_url='pharmacy:login')
 def admin_medicaments(request):
     search_query = request.GET.get('search', '')
     medicaments = Medicament.objects.all()
@@ -457,12 +525,12 @@ def admin_medicaments(request):
     }
     return render(request, 'admin/medicaments.html', context)
 
-@login_required
+@login_required(login_url='pharmacy:login')
 def admin_medicament_detail(request, medicament_id):
     medicament = get_object_or_404(Medicament, id=medicament_id)
     return render(request, 'admin/medicament_detail.html', {'medicament': medicament})
 
-@login_required
+@login_required(login_url='pharmacy:login')
 def admin_toggle_medicament(request, medicament_id):
     if request.method == 'POST':
         medicament = get_object_or_404(Medicament, id=medicament_id)
@@ -473,9 +541,186 @@ def admin_toggle_medicament(request, medicament_id):
 
 def admin_logout(request):
     logout(request)
-    messages.info(request, 'Vous avez été déconnecté avec succès.')
-    return redirect('admin_login')
+    messages.info(request, 'Vous avez été déconnecté avec succès.', extra_tags="info")
+    return redirect('pharmacy:admin_login')
 
 
 def dashboard(request):
     return render(request, 'pharmacy/dashboard.html')
+
+@login_required
+@require_http_methods(["GET"])
+def print_receipt(request, purchase_id):
+    """
+    Generate a printable receipt for a specific purchase
+    """
+    try:
+        purchase = get_object_or_404(Purchase, id=purchase_id)
+        purchase_items = PurchaseItem.objects.filter(purchase=purchase).select_related('medication')
+        
+        context = {
+            'purchase': purchase,
+            'purchase_items': purchase_items,
+            'print_date': timezone.now(),
+            'company_name': 'Smart Pharmacy',
+            'company_address': 'Yaounde, BP xxx s/c UY1',
+            'company_phone': '(237) 698 78 46 67',
+        }
+        
+        # Render the receipt template
+        return render(request, 'pharmacy/receipt.html', context)
+        
+    except Purchase.DoesNotExist:
+        return HttpResponse("Purchase not found", status=404)
+    except Exception as e:
+        return HttpResponse(f"Error generating receipt: {str(e)}", status=500)
+
+@login_required
+@require_http_methods(["POST"])
+def print_receipt_ajax(request):
+    """
+    AJAX endpoint for generating receipt content
+    """
+    try:
+        data = json.loads(request.body)
+        purchase_id = data.get('id')
+        
+        if not purchase_id:
+            return JsonResponse({'success': False, 'error': 'Purchase ID is required'})
+        
+        purchase = get_object_or_404(Purchase, id=purchase_id)
+        purchase_items = PurchaseItem.objects.filter(purchase=purchase).select_related('medication')
+        
+        context = {
+            'purchase': purchase,
+            'purchase_items': purchase_items,
+            'print_date': timezone.now(),
+            'company_name': 'Smart Pharmacy',
+            'company_address': 'Yaounde, BP xxx s/c UY1',
+            'company_phone': '(237) 698 78 46 67',
+        }
+        
+        # Render the receipt template to string
+        # receipt_html = render_to_string('pharmacy/receipt_content.html', context)
+        receipt_html = render_to_string('pharmacy/receipt.html', context)
+        
+        return JsonResponse({
+            'success': True,
+            'receipt_html': receipt_html,
+            'purchase_id': purchase_id
+        })
+        
+    except Purchase.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Purchase not found'})
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON data'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)})
+
+@login_required
+@require_http_methods(["GET"])
+def print_receipt_pdf(request, purchase_id):
+    """
+    Generate a PDF receipt (requires reportlab)
+    pip install reportlab
+    """
+    try:
+        from reportlab.pdfgen import canvas
+        from reportlab.lib.pagesizes import letter, A4
+        from reportlab.lib.units import inch
+        from reportlab.lib.styles import getSampleStyleSheet
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+        from reportlab.lib import colors
+        from io import BytesIO
+        
+        purchase = get_object_or_404(Purchase, id=purchase_id)
+        purchase_items = PurchaseItem.objects.filter(purchase=purchase).select_related('medication')
+        
+        # Create a BytesIO buffer for the PDF
+        buffer = BytesIO()
+        
+        # Create the PDF document
+        doc = SimpleDocTemplate(buffer, pagesize=A4)
+        styles = getSampleStyleSheet()
+        story = []
+        
+        # Company header
+        story.append(Paragraph("<b>Smart Pharmacy</b>", styles['Title']))
+        story.append(Paragraph("Yaounde, BP xxx s/c UY1", styles['Normal']))
+        story.append(Paragraph("Phone: (237) 698 78 46 67", styles['Normal']))
+        story.append(Spacer(1, 20))
+        
+        # Receipt title
+        story.append(Paragraph("<b>RECEIPT</b>", styles['Heading1']))
+        story.append(Spacer(1, 10))
+        
+        # Purchase details
+        purchase_details = [
+            ['Receipt #:', str(purchase.id)],
+            ['Date:', purchase.purchase_date.strftime('%Y-%m-%d %H:%M:%S')],
+            ['Customer:', purchase.customer_name],
+            ['Phone:', purchase.customer_phone or 'N/A'],
+            ['Payment:', purchase.get_payment_method_display()],
+        ]
+        
+        details_table = Table(purchase_details, colWidths=[1.5*inch, 3*inch])
+        details_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ]))
+        story.append(details_table)
+        story.append(Spacer(1, 20))
+        
+        # Items table
+        items_data = [['Item', 'Qty', 'Price', 'Total']]
+        for item in purchase_items:
+            items_data.append([
+                item.medication.name,
+                str(item.quantity),
+                f'${item.price:.2f}',
+                f'${item.price * item.quantity:.2f}'
+            ])
+        
+        # Add total row
+        items_data.append(['', '', 'TOTAL:', f'${purchase.total_amount:.2f}'])
+        
+        items_table = Table(items_data, colWidths=[3*inch, 1*inch, 1*inch, 1*inch])
+        items_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+            ('BACKGROUND', (0, 1), (-1, -2), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('BACKGROUND', (0, -1), (-1, -1), colors.grey),
+            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ]))
+        story.append(items_table)
+        story.append(Spacer(1, 20))
+        
+        # Footer
+        story.append(Paragraph("Thank you for your business!", styles['Normal']))
+        story.append(Paragraph(f"Printed on: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')}", styles['Normal']))
+        
+        # Build PDF
+        doc.build(story)
+        
+        # Get the PDF data
+        pdf_data = buffer.getvalue()
+        buffer.close()
+        
+        # Create HTTP response
+        response = HttpResponse(pdf_data, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="receipt_{purchase_id}.pdf"'
+        return response
+        
+    except ImportError:
+        return HttpResponse("PDF generation requires reportlab library. Install it using: pip install reportlab", status=500)
+    except Purchase.DoesNotExist:
+        return HttpResponse("Purchase not found", status=404)
+    except Exception as e:
+        return HttpResponse(f"Error generating PDF: {str(e)}", status=500)
